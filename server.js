@@ -6,7 +6,12 @@ const path = require("path");
 const app = express();
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "public")));
+
+// ★ [수정 포인트] static 설정에 extensions 옵션을 추가했습니다.
+// 이제 브라우저에서 .html을 안 붙여도 서버가 알아서 찾아줍니다!
+app.use(
+  express.static(path.join(__dirname, "public"), { extensions: ["html"] })
+);
 
 // --- 가상 데이터베이스 (메모리 저장 방식) ---
 let chats = [];
@@ -40,7 +45,6 @@ app.post("/api/login", (req, res) => {
 
 // [관리자] 로그인 (보안 강화: .env 파일의 비번과 대조)
 app.post("/api/admin/login", (req, res) => {
-  // .env 파일에 작성한 ADMIN_PW 값을 읽어와서 비교합니다.
   if (req.body.password === process.env.ADMIN_PW) {
     res.json({ success: true });
   } else {
@@ -48,7 +52,7 @@ app.post("/api/admin/login", (req, res) => {
   }
 });
 
-// [관리자] 엑셀(CSV) 추출 - 한글 깨짐 방지 BOM 추가
+// [관리자] 엑셀(CSV) 추출
 app.get("/api/admin/export", (req, res) => {
   let csv = "\uFEFF이름,이메일,접속시간,IP\n";
   watchLogs.forEach((l) => {
@@ -62,7 +66,7 @@ app.get("/api/admin/export", (req, res) => {
   res.send(csv);
 });
 
-// [관리자] 전체 데이터 로딩 (공지, 스트림, 참가자, 로그, 채팅)
+// [관리자] 전체 데이터 로딩
 app.get("/api/admin/data", (req, res) => {
   res.json({ registrants, watchLogs, chats, notice, streamConfig });
 });
@@ -104,11 +108,8 @@ app.delete("/api/chats/:id", (req, res) => {
   res.json({ success: true });
 });
 
-// 기존: app.listen(3000, () => ...);
-
-// 수정: Render 같은 외부 서버가 주는 포트를 1순위로 쓰고, 없으면 3000을 씁니다.
+// 포트 설정
 const PORT = process.env.PORT || 3000;
-
 app.listen(PORT, () => {
   console.log(`🚀 서버가 http://localhost:${PORT} 에서 가동 중입니다.`);
 });
