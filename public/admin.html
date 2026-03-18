@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <title>COMMAND CENTER | ADMIN</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
+    />
+    <style>
+      body {
+        font-family: "Pretendard", sans-serif;
+        background-color: #ffffff;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+      .tab-btn.active {
+        color: #2563eb;
+        border-bottom: 2px solid #2563eb;
+        font-weight: 900;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      .card-ui {
+        border: 1px solid #f1f5f9;
+        border-radius: 32px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.03);
+        background: #fff;
+      }
+      input {
+        border: 1px solid #e2e8f0 !important;
+      }
+      input:focus {
+        border: 1px solid #3b82f6 !important;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body class="antialiased p-8 md:p-16">
+    <div
+      id="admin-gate"
+      class="fixed inset-0 z-[200] bg-white flex items-center justify-center p-6"
+    >
+      <div class="w-full max-w-[320px] text-center animate-fade-in">
+        <h1 class="text-3xl font-black italic tracking-tighter mb-10 uppercase">
+          Admin Access
+        </h1>
+        <input
+          id="admin-pw"
+          type="password"
+          placeholder="관리자 비밀번호"
+          class="w-full p-4 rounded-2xl mb-4 text-center bg-slate-50 border-none outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+        />
+        <button
+          onclick="loginAdmin()"
+          class="w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl hover:bg-slate-800 transition-all"
+        >
+          접속하기
+        </button>
+        <p
+          class="text-[10px] text-slate-300 font-bold mt-8 tracking-widest uppercase"
+        >
+          Authorized Personnel Only
+        </p>
+      </div>
+    </div>
+
+    <div id="admin-main" class="hidden">
+      <header class="flex justify-between items-end mb-16">
+        <div>
+          <h1
+            class="text-4xl font-black tracking-tighter italic mb-1 uppercase"
+          >
+            Command Center
+          </h1>
+          <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">
+            Webinar Management System
+          </p>
+        </div>
+        <div class="flex gap-3">
+          <button
+            onclick="location.href='/api/admin/export'"
+            class="bg-blue-600 text-white px-8 py-4 rounded-3xl font-bold shadow-2xl shadow-blue-600/20 hover:scale-[1.02] transition-all"
+          >
+            엑셀 다운로드
+          </button>
+          <button
+            onclick="location.href='/'"
+            class="bg-slate-50 border border-slate-100 px-8 py-4 rounded-3xl font-bold text-slate-400"
+          >
+            사용자 화면
+          </button>
+        </div>
+      </header>
+
+      <div class="grid grid-cols-3 gap-10 mb-16 text-center">
+        <div class="card-ui p-12">
+          <p
+            class="text-slate-300 text-[10px] font-black uppercase mb-3 tracking-widest"
+          >
+            Watchers
+          </p>
+          <h3 id="stat-v" class="text-5xl font-black">0</h3>
+        </div>
+        <div class="card-ui p-12">
+          <p
+            class="text-slate-300 text-[10px] font-black uppercase mb-3 tracking-widest"
+          >
+            Chats
+          </p>
+          <h3 id="stat-c" class="text-5xl font-black">0</h3>
+        </div>
+        <div class="card-ui p-12">
+          <p
+            class="text-slate-300 text-[10px] font-black uppercase mb-3 tracking-widest"
+          >
+            Registrants
+          </p>
+          <h3 id="stat-r" class="text-5xl font-black text-blue-600">0</h3>
+        </div>
+      </div>
+
+      <div class="card-ui overflow-hidden">
+        <nav class="flex px-12 border-b bg-slate-50/30">
+          <button
+            onclick="openTab('t-stream')"
+            class="tab-btn active px-8 py-6 text-[11px] font-black uppercase tracking-widest"
+          >
+            송출/공지
+          </button>
+          <button
+            onclick="openTab('t-regs')"
+            class="tab-btn px-8 py-6 text-[11px] font-black uppercase tracking-widest"
+          >
+            참가자 관리
+          </button>
+          <button
+            onclick="openTab('t-logs')"
+            class="tab-btn px-8 py-6 text-[11px] font-black uppercase tracking-widest"
+          >
+            시청 로그
+          </button>
+          <button
+            onclick="openTab('t-chats')"
+            class="tab-btn px-8 py-6 text-[11px] font-black uppercase tracking-widest text-red-400"
+          >
+            채팅 관리
+          </button>
+        </nav>
+
+        <div class="p-14">
+          <div id="t-stream" class="tab-content active space-y-12">
+            <div class="space-y-4">
+              <h3
+                class="font-black text-xs uppercase text-slate-400 tracking-widest"
+              >
+                실시간 공지 사항
+              </h3>
+              <div class="flex gap-4">
+                <input
+                  id="n-input"
+                  type="text"
+                  class="flex-1 p-5 rounded-3xl outline-none"
+                  placeholder="공지 내용 입력"
+                />
+                <button
+                  onclick="updateNotice()"
+                  class="bg-slate-900 text-white px-12 rounded-3xl font-bold"
+                >
+                  전송
+                </button>
+              </div>
+            </div>
+            <div class="space-y-4 pt-4 border-t border-slate-50">
+              <h3
+                class="font-black text-xs uppercase text-slate-400 tracking-widest"
+              >
+                스트리밍 주소
+              </h3>
+              <div class="grid grid-cols-2 gap-6">
+                <input
+                  id="hls-url"
+                  type="text"
+                  class="p-5 rounded-3xl outline-none"
+                  placeholder="HLS (.m3u8)"
+                />
+                <input
+                  id="yt-url"
+                  type="text"
+                  class="p-5 rounded-3xl outline-none"
+                  placeholder="Youtube URL"
+                />
+              </div>
+              <button
+                onclick="updateStream()"
+                class="bg-blue-600 text-white px-12 py-5 rounded-3xl font-bold shadow-xl shadow-blue-600/10"
+              >
+                저장하기
+              </button>
+            </div>
+          </div>
+
+          <div id="t-regs" class="tab-content">
+            <div class="flex justify-between items-center mb-10">
+              <h3
+                class="font-black text-xs uppercase text-slate-400 tracking-widest"
+              >
+                Registrants List
+              </h3>
+              <button
+                onclick="showModal()"
+                class="text-[10px] font-black bg-blue-50 text-blue-600 px-4 py-2 rounded-full"
+              >
+                + ADD NEW
+              </button>
+            </div>
+            <table class="w-full text-left text-sm font-medium">
+              <tbody id="reg-list" class="divide-y divide-slate-50"></tbody>
+            </table>
+          </div>
+
+          <div id="t-logs" class="tab-content">
+            <table class="w-full text-left text-sm">
+              <tbody id="log-list" class="divide-y divide-slate-50"></tbody>
+            </table>
+          </div>
+
+          <div id="t-chats" class="tab-content space-y-3">
+            <div id="chat-admin-feed" class="space-y-3"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="modal"
+      class="hidden fixed inset-0 z-[300] bg-white/90 backdrop-blur-md flex items-center justify-center p-6"
+    >
+      <div class="w-full max-w-[340px] text-center space-y-4">
+        <h2 class="text-3xl font-black mb-10 tracking-tighter italic">
+          NEW REGISTRANT
+        </h2>
+        <input
+          id="m-name"
+          type="text"
+          placeholder="성함"
+          class="w-full p-4 rounded-2xl outline-none border-none bg-slate-50"
+        />
+        <input
+          id="m-email"
+          type="email"
+          placeholder="이메일"
+          class="w-full p-4 rounded-2xl outline-none border-none bg-slate-50"
+        />
+        <button
+          onclick="saveReg()"
+          class="w-full bg-slate-900 text-white py-5 rounded-3xl font-bold shadow-2xl"
+        >
+          등록 완료
+        </button>
+        <button
+          onclick="hideModal()"
+          class="w-full text-slate-300 text-[10px] font-black uppercase pt-2"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+
+    <script>
+      async function loginAdmin() {
+        const pw = document.getElementById("admin-pw").value;
+        const res = await fetch("/api/admin/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ password: pw }),
+        });
+        if (res.ok) {
+          document.getElementById("admin-gate").style.display = "none";
+          document.getElementById("admin-main").classList.remove("hidden");
+          load();
+          setInterval(load, 3000);
+        } else {
+          alert("관리자 비밀번호가 틀렸습니다.");
+        }
+      }
+
+      async function load() {
+        const res = await fetch("/api/admin/data");
+        const data = await res.json();
+
+        document.getElementById("stat-v").innerText = data.watchLogs.length;
+        document.getElementById("stat-c").innerText = data.chats.length;
+        document.getElementById("stat-r").innerText = data.registrants.length;
+
+        if (!document.getElementById("n-input").value)
+          document.getElementById("n-input").value = data.notice;
+        if (!document.getElementById("hls-url").value) {
+          document.getElementById("hls-url").value = data.streamConfig.hlsUrl;
+          document.getElementById("yt-url").value =
+            data.streamConfig.youtubeUrl;
+        }
+
+        document.getElementById("reg-list").innerHTML = data.registrants
+          .map(
+            (r) => `
+                <tr><td class="py-6 font-bold text-slate-700">${r.name}</td><td class="text-slate-400">${r.email}</td><td class="text-right text-[9px] font-black text-red-400 cursor-pointer uppercase tracking-widest" onclick="deleteReg(${r.id})">Delete</td></tr>
+            `
+          )
+          .join("");
+
+        document.getElementById("log-list").innerHTML = data.watchLogs
+          .reverse()
+          .map(
+            (l) => `
+                <tr><td class="py-6 font-bold text-slate-700">${l.name}</td><td class="text-slate-400 font-mono text-[10px]">${l.time}</td><td class="text-slate-200 text-[9px]">${l.ip}</td></tr>
+            `
+          )
+          .join("");
+
+        document.getElementById("chat-admin-feed").innerHTML = data.chats
+          .reverse()
+          .map(
+            (c) => `
+                <div class="flex justify-between items-center p-8 bg-slate-50 rounded-[32px]">
+                    <div class="text-xs text-slate-600">
+                        <div class="flex items-center gap-2 mb-2"><b class="text-blue-600 text-[10px] uppercase font-black tracking-widest">${c.user}</b> <span class="text-slate-300 font-mono text-[9px]">${c.time}</span></div>
+                        <p class="font-medium leading-relaxed">${c.message}</p>
+                    </div>
+                    <button onclick="deleteChat(${c.id})" class="text-[9px] font-black text-red-400 uppercase tracking-widest ml-6">Remove</button>
+                </div>
+            `
+          )
+          .join("");
+      }
+
+      async function updateNotice() {
+        await fetch("/api/admin/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            notice: document.getElementById("n-input").value,
+          }),
+        });
+        alert("공지가 실시간 반영되었습니다.");
+      }
+
+      async function updateStream() {
+        await fetch("/api/admin/update", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            streamConfig: {
+              hlsUrl: document.getElementById("hls-url").value,
+              youtubeUrl: document.getElementById("yt-url").value,
+            },
+          }),
+        });
+        alert("스트림 주소가 저장되었습니다.");
+      }
+
+      async function deleteChat(id) {
+        await fetch(`/api/chats/${id}`, { method: "DELETE" });
+        load();
+      }
+      async function deleteReg(id) {
+        if (confirm("삭제하시겠습니까?")) {
+          await fetch(`/api/admin/reg/${id}`, { method: "DELETE" });
+          load();
+        }
+      }
+      function showModal() {
+        document.getElementById("modal").classList.remove("hidden");
+      }
+      function hideModal() {
+        document.getElementById("modal").classList.add("hidden");
+      }
+      async function saveReg() {
+        await fetch("/api/admin/reg", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: document.getElementById("m-name").value,
+            email: document.getElementById("m-email").value,
+          }),
+        });
+        hideModal();
+        load();
+      }
+
+      function openTab(name) {
+        document
+          .querySelectorAll(".tab-content")
+          .forEach((c) => c.classList.remove("active"));
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        document.getElementById(name).classList.add("active");
+        event.currentTarget.classList.add("active");
+      }
+    </script>
+  </body>
+</html>

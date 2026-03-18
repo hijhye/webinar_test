@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RISS LIVE : SMART WEBINAR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://vjs.zencdn.net/7.20.3/video-js.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css"
+    />
+    <style>
+      body {
+        font-family: "Pretendard", sans-serif;
+        background-color: #ffffff;
+        color: #0f172a;
+        letter-spacing: -0.03em;
+      }
+
+      /* 상단 슬림 공지바 */
+      #top-notice-bar {
+        background: #1e293b;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      /* 영상 스테이지 : 이너섀도우 제거, 부드러운 외곽 그림자만 사용 */
+      .video-stage {
+        border-radius: 32px;
+        background: #000;
+        overflow: hidden;
+        box-shadow: 0 40px 100px -20px rgba(0, 0, 0, 0.15);
+        border: 1px solid #f1f5f9;
+      }
+
+      /* 채팅 디자인 : 미니멀리즘 스타일 */
+      .chat-row {
+        border-bottom: 1px solid #f8fafc;
+        padding: 18px 8px;
+        transition: background 0.2s;
+      }
+      .chat-row:hover {
+        background: #fbfcfe;
+      }
+
+      /* 스크롤바 숨기기 */
+      .no-scrollbar::-webkit-scrollbar {
+        width: 0px;
+      }
+
+      /* 버튼 : 플랫하고 모던하게 */
+      .btn-black {
+        background: #0f172a;
+        color: #fff;
+        transition: all 0.2s;
+      }
+      .btn-black:hover {
+        background: #334155;
+        transform: translateY(-1px);
+      }
+      .btn-black:active {
+        transform: translateY(0px);
+      }
+
+      /* 입력창 : 이너섀도우 없이 깔끔한 보더만 */
+      textarea {
+        border: 1px solid #e2e8f0 !important;
+        background: #fdfdfe !important;
+      }
+      textarea:focus {
+        border: 1px solid #3b82f6 !important;
+        outline: none;
+      }
+    </style>
+  </head>
+  <body class="antialiased">
+    <div
+      id="login-modal"
+      class="fixed inset-0 z-[100] bg-white flex items-center justify-center p-6"
+    >
+      <div class="w-full max-w-[340px] animate-fade-in">
+        <div class="text-center mb-12">
+          <div
+            class="inline-block bg-slate-900 text-white px-4 py-1 rounded-full text-[10px] font-black tracking-widest uppercase mb-4"
+          >
+            Webinar 2026
+          </div>
+          <h1 class="text-4xl font-black tracking-tighter italic mb-3">
+            RISS LIVE
+          </h1>
+          <p class="text-slate-400 font-medium text-sm">
+            참가 정보를 입력하고 입장하세요.
+          </p>
+        </div>
+        <div class="space-y-3">
+          <input
+            id="l-name"
+            type="text"
+            placeholder="성함"
+            class="w-full border border-slate-100 bg-slate-50 p-4 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all"
+          />
+          <input
+            id="l-email"
+            type="email"
+            placeholder="이메일 주소"
+            class="w-full border border-slate-100 bg-slate-50 p-4 rounded-2xl outline-none focus:bg-white focus:border-blue-500 transition-all"
+          />
+          <button
+            onclick="doLogin()"
+            class="w-full btn-black py-5 rounded-3xl font-bold text-lg mt-6 shadow-2xl shadow-slate-900/10"
+          >
+            시청 시작하기
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="main-ui" class="hidden opacity-0 transition-opacity duration-1000">
+      <div
+        id="top-notice-bar"
+        class="h-10 flex items-center justify-center px-10 relative z-50"
+      >
+        <div class="flex items-center gap-3">
+          <span
+            class="text-[9px] font-black bg-white/20 text-white px-2 py-0.5 rounded uppercase tracking-tighter"
+            >Announcement</span
+          >
+          <p
+            id="notice-content"
+            class="text-white text-[12px] font-bold tracking-tight"
+          ></p>
+        </div>
+      </div>
+
+      <header
+        class="h-16 flex justify-between items-center px-10 bg-white border-b border-slate-50 sticky top-0 z-40"
+      >
+        <div class="flex items-center gap-6">
+          <span class="text-lg font-black tracking-tighter italic"
+            >RISS LIVE</span
+          >
+          <div class="flex items-center gap-2">
+            <span
+              class="w-1.5 h-1.5 bg-red-500 rounded-full animate-pulse"
+            ></span>
+            <span
+              class="text-[10px] font-black text-slate-400 uppercase tracking-widest"
+              >On-Air</span
+            >
+          </div>
+        </div>
+        <div class="flex items-center gap-6">
+          <span
+            id="user-info"
+            class="text-[11px] font-black text-slate-300 tracking-widest"
+          ></span>
+          <button
+            onclick="window.open('/admin.html')"
+            class="text-[10px] font-black bg-slate-50 px-3 py-1 rounded-full text-slate-400 hover:text-slate-900 transition-all"
+          >
+            ADMIN
+          </button>
+        </div>
+      </header>
+
+      <main class="max-w-[1550px] mx-auto p-6 md:p-14 grid grid-cols-12 gap-14">
+        <div class="col-span-12 lg:col-span-9">
+          <div class="video-stage mb-10">
+            <div id="p1-box" class="w-full h-full">
+              <video id="vid" class="video-js vjs-fluid"></video>
+            </div>
+            <iframe
+              id="p2-box"
+              class="hidden w-full h-full aspect-video"
+              src=""
+              frameborder="0"
+            ></iframe>
+          </div>
+
+          <div
+            class="flex flex-col md:flex-row justify-between items-start md:items-end gap-6"
+          >
+            <div>
+              <div
+                class="text-[11px] font-black text-blue-500 uppercase tracking-widest mb-2"
+              >
+                Live Session
+              </div>
+              <h2
+                class="text-3xl font-black text-slate-900 mb-2 tracking-tighter"
+              >
+                2026 RISS 학술 데이터 활용 전략 세미나
+              </h2>
+              <div class="flex gap-4 text-xs font-bold text-slate-400">
+                <button onclick="switchP(1)" id="btn-p1" class="text-slate-900">
+                  서버 1 (고화질)
+                </button>
+                <button
+                  onclick="switchP(2)"
+                  id="btn-p2"
+                  class="hover:text-slate-900 transition-all"
+                >
+                  서버 2 (유튜브)
+                </button>
+              </div>
+            </div>
+            <button
+              class="bg-blue-50 text-blue-600 px-8 py-4 rounded-3xl font-black text-xs uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all"
+            >
+              Survey Participation ↗
+            </button>
+          </div>
+        </div>
+
+        <aside class="col-span-12 lg:col-span-3 flex flex-col h-[750px]">
+          <div class="mb-8 flex items-center justify-between">
+            <h3 class="font-black text-xl tracking-tighter italic">Q&A FEED</h3>
+            <span class="text-[10px] font-black text-slate-300">REALTIME</span>
+          </div>
+
+          <div
+            id="chat-list"
+            class="flex-1 overflow-y-auto no-scrollbar pb-6 space-y-1 border-t border-slate-50"
+          ></div>
+
+          <div class="pt-8">
+            <div class="relative">
+              <textarea
+                id="chat-msg"
+                class="w-full p-6 rounded-[2.5rem] text-sm h-36 resize-none outline-none transition-all placeholder:text-slate-300"
+                placeholder="궁금한 점을 남겨주세요."
+              ></textarea>
+              <button
+                onclick="sendChat()"
+                class="absolute bottom-5 right-5 w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all shadow-xl shadow-slate-900/10"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    d="M5 12h14M12 5l7 7-7 7"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </aside>
+      </main>
+    </div>
+
+    <script src="https://vjs.zencdn.net/7.20.3/video.min.js"></script>
+    <script>
+      let player = videojs("vid");
+      let currentUser = "";
+
+      async function doLogin() {
+        const name = document.getElementById("l-name").value;
+        const email = document.getElementById("l-email").value;
+        const res = await fetch("/api/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email }),
+        });
+        if (res.ok) {
+          currentUser = name;
+          document.getElementById("login-modal").classList.add("hidden");
+          document.getElementById("main-ui").classList.remove("hidden");
+          setTimeout(
+            () =>
+              document.getElementById("main-ui").classList.add("opacity-100"),
+            50
+          );
+          document.getElementById("user-info").innerText = name.toUpperCase();
+          init();
+        } else {
+          alert("사전 신청 내역이 없습니다.");
+        }
+      }
+
+      function init() {
+        loadStream();
+        syncData();
+        setInterval(syncData, 3000);
+      }
+
+      async function syncData() {
+        try {
+          const res = await fetch("/api/admin/data");
+          const data = await res.json();
+
+          // ✅ 상단 공지 실시간 동기화
+          const noticeEl = document.getElementById("notice-content");
+          if (noticeEl.innerText !== data.notice) {
+            noticeEl.style.opacity = "0";
+            setTimeout(() => {
+              noticeEl.innerText = data.notice;
+              noticeEl.style.opacity = "1";
+            }, 300);
+          }
+
+          // 채팅 동기화
+          const list = document.getElementById("chat-list");
+          list.innerHTML = data.chats
+            .map(
+              (c) => `
+                    <div class="chat-row">
+                        <div class="flex items-center gap-2 mb-1.5">
+                            <span class="text-[10px] font-black text-slate-800 uppercase italic">${c.user}</span>
+                            <span class="text-[9px] text-slate-300 font-bold">${c.time}</span>
+                        </div>
+                        <p class="text-[13px] text-slate-500 leading-relaxed font-medium">${c.message}</p>
+                    </div>
+                `
+            )
+            .join("");
+          list.scrollTop = list.scrollHeight;
+        } catch (e) {
+          console.error(e);
+        }
+      }
+
+      async function loadStream() {
+        const res = await fetch("/api/admin/data");
+        const data = await res.json();
+        player.src({
+          type: "application/x-mpegURL",
+          src: data.streamConfig.hlsUrl,
+        });
+        document.getElementById("p2-box").src = data.streamConfig.youtubeUrl;
+      }
+
+      function switchP(n) {
+        const b1 = document.getElementById("btn-p1");
+        const b2 = document.getElementById("btn-p2");
+        if (n === 1) {
+          document.getElementById("p1-box").classList.remove("hidden");
+          document.getElementById("p2-box").classList.add("hidden");
+          b1.classList.add("text-slate-900");
+          b1.classList.remove("text-slate-400");
+          b2.classList.add("text-slate-400");
+          b2.classList.remove("text-slate-900");
+          player.play();
+        } else {
+          document.getElementById("p1-box").classList.add("hidden");
+          document.getElementById("p2-box").classList.remove("hidden");
+          b2.classList.add("text-slate-900");
+          b2.classList.remove("text-slate-400");
+          b1.classList.add("text-slate-400");
+          b1.classList.remove("text-slate-900");
+          player.pause();
+        }
+      }
+
+      async function sendChat() {
+        const msgEl = document.getElementById("chat-msg");
+        if (!msgEl.value.trim()) return;
+        await fetch("/api/chats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ user: currentUser, message: msgEl.value }),
+        });
+        msgEl.value = "";
+        syncData();
+      }
+    </script>
+  </body>
+</html>
