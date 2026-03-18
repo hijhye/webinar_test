@@ -104,4 +104,11 @@ app.delete("/api/chats/:id", (req, res) => {
   res.json({ success: true });
 });
 
-app.listen(3000, () => console.log("🚀 서버 가동 중: http://localhost:3000"));
+// 기존: app.listen(3000, () => ...);
+
+// 수정: Render 같은 외부 서버가 주는 포트를 1순위로 쓰고, 없으면 3000을 씁니다.
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`🚀 서버가 http://localhost:${PORT} 에서 가동 중입니다.`);
+});
